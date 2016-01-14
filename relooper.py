@@ -25,43 +25,7 @@ THE SOFTWARE.
 from basics import *
 from validator import *
 
-class Relooper:
-    def __init__(self):
-        self.blocks = []
-        self.shapes = []
-
-    def add_block(self, block):
-        self.blocks.append(block)
-
-    def render(self):
-        pass
-
-    def calculate(self, entry_block):
-        pre_opt = PreOptimizer(self)
-        pre_opt.find_live(entry_block)
-
-        # Add incoming branches from live blocks, ignoring dead code
-        for curr_blk in self.blocks:
-            if curr_blk not in pre_opt.live_blocks:
-                continue
-
-            for successor in curr_blk.branches_out:
-                successor.branches_in[curr_blk] = Branch(None)
-
-        # Do the split dead ends optimization
-
-        # Recursively process the graph
-        all_blocks = set()
-        for curr_block in self.blocks:
-            all_blocks.add(curr_block)
-
-        entries = set()
-        entries.add(entry_block)
-
-        root = Analyzer().process
-
 class RelooperRecursor:
-    @verify(parent=Relooper)
     def __init__(self, parent):
         self.parent = parent
 
@@ -83,7 +47,7 @@ class PreOptimizer(RelooperRecursor):
 
 class Analyzer(RelooperRecursor):
     def __init__(self, parent):
-        RelooperRecursor.__init__(parent)
+        RelooperRecursor.__init__(self, parent)
 
     def notice(self, new_shape):
         self.parent.shapes.append(new_shape)
@@ -169,6 +133,41 @@ class Analyzer(RelooperRecursor):
 
 
 
+class Relooper:
+    def __init__(self):
+        self.blocks = []
+        self.shapes = []
+
+    def add_block(self, block):
+        self.blocks.append(block)
+
+    def render(self):
+        pass
+
+    def calculate(self, entry_block):
+        pre_opt = PreOptimizer(self)
+        pre_opt.find_live(entry_block)
+
+        # Add incoming branches from live blocks, ignoring dead code
+        for curr_blk in self.blocks:
+            if curr_blk not in pre_opt.live_blocks:
+                continue
+
+            for successor in curr_blk.branches_out:
+                successor.branches_in[curr_blk] = Branch(None)
+
+        # Do the split dead ends optimization
+
+        # Recursively process the graph
+        all_blocks = set()
+        for curr_block in self.blocks:
+            all_blocks.add(curr_block)
+
+        entries = set()
+        entries.add(entry_block)
+
+        analyzer = Analyzer(self)
+        root = analyzer.process(all_blocks, list(entries), None)
 
 def main():
     b_a = Block("A", "// Block A\n")
