@@ -98,3 +98,20 @@ class SimpleShape(Shape):
         self.inner.render(in_loop)
         if self.next_shape:
             self.next_shape.render(in_loop)
+
+class LabeledShape(Shape):
+    def __init__(self, shp_type):
+        Shape.__init__(self, shp_type)
+        self.labeled = False
+
+    def render(self, in_loop):
+        pass
+
+
+class LoopShape(LabeledShape):
+    def __init__(self, shp_type):
+        LabeledShape.__init__(self, ShapeType.LOOP)
+        self.inner = None
+
+    def render(self, in_loop):
+        pass
